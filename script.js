@@ -27,12 +27,22 @@ var wallEnabled = false;
 var shot = false
 var nutX = 900;
 var nutY = 1100;
-var shootDirection = 1
+var shootDirection = 1;
 var hitSfx = new Audio("assets/sounds/hit.wav");
 var boomSfx = new Audio("assets/sounds/explode.wav");
 var meowSfx = new Audio("assets/sounds/meow.wav");
 var cannonSfx = new Audio("assets/sounds/cannon.wav");
 var song = new Audio("assets/sounds/song.wav");
+var textureSet = "default";
+var textureSets = {
+    "default": [
+
+    ],
+    "noDither": [
+        "cat",
+        "macamo"
+    ]
+};
 function init () {
     catPosition = Math.round(Math.random());
     bombPosition = 1-catPosition;
@@ -45,14 +55,17 @@ setInterval(function() {
 }, 250);
 ctx.imageSmoothingEnabled = false;
 gameCanvas.style.imageRendering = "pixelated";
-ctx.fillStyle = "white";
-ctx.textAlign = "center";
-ctx.textBaseline = "middle";
-ctx.font = "bold 48px Arial";
-ctx.fillText("Please click on the canvas so audio can play.", gameCanvas.width / 2, gameCanvas.height / 2);
 function getImagePath(object, animation, frameCount, animationFrame2) {
     if (!animationFrame2) {
         animationFrame2 = animationFrame
+    }
+    // Check if the object exists in the current textureSet
+    if (
+        textureSets[textureSet] &&
+        Array.isArray(textureSets[textureSet]) &&
+        textureSets[textureSet].includes(object)
+    ) {
+        return "assets/" + textureSet + "/" + object + "/" + animation + "/" + (animationFrame2 % frameCount).toString() + ".png";
     }
     return "assets/images/" + object + "/" + animation + "/" + (animationFrame2 % frameCount).toString() + ".png";
 }
@@ -141,6 +154,18 @@ function gameLoop() {
     drawCannon();
     drawArrows();
     requestAnimationFrame(gameLoop);
+    if (!started) {
+        ctx.save();
+        ctx.globalAlpha = 0.5;
+        ctx.fillStyle = "#000";
+        ctx.fillRect(0, 0, gameCanvas.width, gameCanvas.height);
+        ctx.font = "80px Arial";
+        ctx.globalAlpha = 1
+        ctx.fillStyle = "#fff";
+        ctx.textAlign = "center";
+        ctx.fillText("Please click so audio can play.", gameCanvas.width / 2, gameCanvas.height / 2);
+        ctx.restore();
+    }
     if (shot) {
         nutY -= 13;
         nutX += 27 * shootDirection;
@@ -201,44 +226,76 @@ function gameLoop() {
     }
 }
 function handleClick (event) {
-    const rect = gameCanvas.getBoundingClientRect();
-    const scaleX = gameCanvas.width / rect.width;
-    const scaleY = gameCanvas.height / rect.height;
-    const canvasX = (event.clientX - rect.left) * scaleX;
-    const canvasY = (event.clientY - rect.top) * scaleY;
-    if (canvasX > 590 && canvasX < 850) {
-        if (canvasY > 830 && canvasY < 1090) {
-            if (!shot) {
-                shootDirection = -1
-                shot = true
-                leftArrowAnimation = "clicked"
-                macamoAnimation = "left"
-                cannonSfx.play()
+    if (started) {
+        const rect = gameCanvas.getBoundingClientRect();
+        const scaleX = gameCanvas.width / rect.width;
+        const scaleY = gameCanvas.height / rect.height;
+        const canvasX = (event.clientX - rect.left) * scaleX;
+        const canvasY = (event.clientY - rect.top) * scaleY;
+        if (canvasX > 590 && canvasX < 850) {
+            if (canvasY > 830 && canvasY < 1090) {
+                if (!shot) {
+                    shootDirection = -1
+                    shot = true
+                    leftArrowAnimation = "clicked"
+                    macamoAnimation = "left"
+                    cannonSfx.play()
+                }
             }
         }
-    }
-    if (canvasX > 1050 && canvasX < 1310) {
-        if (canvasY > 830 && canvasY < 1090) {
-            if (!shot) {
-                shootDirection = 1
-                shot = true
-                rightArrowAnimation = "clicked"
-                macamoAnimation = "right"
-                cannonSfx.play()
+        if (canvasX > 1050 && canvasX < 1310) {
+            if (canvasY > 830 && canvasY < 1090) {
+                if (!shot) {
+                    shootDirection = 1
+                    shot = true
+                    rightArrowAnimation = "clicked"
+                    macamoAnimation = "right"
+                    cannonSfx.play()
+                }
             }
         }
     }
 }
 let started = false;
+gameLoop();
 function startGameOnce() {
     if (!started) {
         gameCanvas.addEventListener('click', handleClick)
         started = true;
         song.play();
-        gameLoop();
     }
 }
 gameCanvas.addEventListener('click', startGameOnce, { once: true });
 song.addEventListener('ended', function() {
     location.reload();
+});
+var link = document.createElement('link');
+link.rel = 'icon';
+link.type = 'image/png';
+document.head.appendChild(link);
+function updateFavicon() {
+    link.href = getImagePath("nut", nutAnimation, 2);
+}
+setInterval(updateFavicon, 250);
+document.getElementById('noDithering').addEventListener('change', function(e) {
+    textureSet = e.target.checked ? 'noDither' : 'default';
+    document.cookie = "textureSet=" + textureSet + "; path=/";
+});
+
+// On page load, set checkbox and textureSet from cookie if present
+(function() {
+    var matches = document.cookie.match(/(?:^|; )textureSet=([^;]*)/);
+    if (matches) {
+        textureSet = matches[1];
+        document.getElementById('noDithering').checked = (textureSet === 'noDither');
+    }
+})();
+var extrasOpened = false
+document.getElementById("extrasOpenClose").addEventListener("click", function() {
+    extrasOpened = !extrasOpened
+    if (extrasOpened) {
+        document.getElementById("extras").style.right = "0"
+    } else {
+        document.getElementById("extras").style.right = "-31%"
+    }
 });
