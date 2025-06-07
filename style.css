@@ -1,0 +1,19 @@
+body {
+    background-color: #161616;
+    margin: 0;
+    height: 100vh;
+    overflow: hidden;
+}
+#gameCanvas {
+    max-width: 150vh;
+    max-height: 67vw;
+    aspect-ratio: 4/3;
+    width: 100vw;
+    height: 100vh;
+    object-fit: contain;
+    background-color: black;
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+}
