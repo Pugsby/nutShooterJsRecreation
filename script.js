@@ -1,3 +1,10 @@
+const urlParams = new URLSearchParams(window.location.search);
+if (urlParams.has('lobotomy') && (urlParams.get('lobotomy') === 'true' || urlParams.get('lobotomy') === '' || urlParams.get('lobotomy') === null)) {
+    const script = document.createElement('script');
+    script.src = 'lobotomy.js';
+    document.head.appendChild(script);
+    throw new Error('Lobotomy mode enabled. Stopping main script.');
+}
 var gameCanvas = document.getElementById("gameCanvas");
 var ctx = gameCanvas.getContext("2d");
 var animationFrame = 0;
@@ -145,11 +152,17 @@ function gameLoop() {
     drawBackground();
     drawNut();
     drawFloor();
-    drawMacamo();
-    drawCat();
-    if (!(bombAnimationFrame != animationFrame && bombAnimationFrame > 2)) {
-        drawBomb();
-    }
+    // Run Macamo, Cat, and Bomb drawing asynchronously
+    Promise.all([
+        new Promise(resolve => { drawMacamo(); setTimeout(resolve, 0); }),
+        new Promise(resolve => { drawCat(); setTimeout(resolve, 0); }),
+        new Promise(resolve => {
+            if (!(bombAnimationFrame != animationFrame && bombAnimationFrame > 2)) {
+                drawBomb();
+            }
+            setTimeout(resolve, 0);
+        })
+    ]);
     drawWall();
     drawCannon();
     drawArrows();
@@ -256,7 +269,7 @@ function handleClick (event) {
         }
     }
 }
-let started = false;
+var started = false;
 gameLoop();
 function startGameOnce() {
     if (!started) {
