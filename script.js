@@ -1,10 +1,10 @@
-const urlParams = new URLSearchParams(window.location.search);
-if (urlParams.has('lobotomy') && (urlParams.get('lobotomy') === 'true' || urlParams.get('lobotomy') === '' || urlParams.get('lobotomy') === null)) {
-    const script = document.createElement('script');
-    script.src = 'lobotomy.js';
-    document.head.appendChild(script);
-    throw new Error('Lobotomy mode enabled. Stopping main script.');
-}
+//     __       _     __ _                 _            
+//  /\ \ \_   _| |_  / _\ |__   ___   ___ | |_ ___ _ __ 
+// /  \/ / | | | __| \ \| '_ \ / _ \ / _ \| __/ _ \ '__|
+/// /\  /| |_| | |_  _\ \ | | | (_) | (_) | ||  __/ |   
+//\_\ \/  \__,_|\__| \__/_| |_|\___/ \___/ \__\___|_|   
+// Coded by Pugsby, Inspired by Nut Shooter by Jacadamia
+
 var gameCanvas = document.getElementById("gameCanvas");
 var ctx = gameCanvas.getContext("2d");
 var animationFrame = 0;
@@ -59,9 +59,30 @@ init();
 setInterval(function() {
     animationFrame += 1;
     bombAnimationFrame += 1;
+    // all animaitons a 4 fps so I don't have to do individual variables, but I needed one for Bomb because it should be able to go back to 0 without everything else going to 0
 }, 250);
 ctx.imageSmoothingEnabled = false;
 gameCanvas.style.imageRendering = "pixelated";
+document.getElementById("clearCache").addEventListener("click", function() {
+    localStorage.clear();
+});
+function getImageFromLocalStorage(path) {
+    // check if the image is in local storage
+    if (localStorage.getItem(path)) {
+        return localStorage.getItem(path);
+    }
+    // if not, fetch it from the server and store it in local storage
+    fetch(path)
+        .then(response => response.blob())
+        .then(blob => {
+            const reader = new FileReader();
+            reader.onloadend = function() {
+                localStorage.setItem(path, reader.result);
+            };
+            reader.readAsDataURL(blob);
+        });
+    return path;
+}
 function getImagePath(object, animation, frameCount, animationFrame2) {
     if (!animationFrame2) {
         animationFrame2 = animationFrame
@@ -72,9 +93,9 @@ function getImagePath(object, animation, frameCount, animationFrame2) {
         Array.isArray(textureSets[textureSet]) &&
         textureSets[textureSet].includes(object)
     ) {
-        return "assets/" + textureSet + "/" + object + "/" + animation + "/" + (animationFrame2 % frameCount).toString() + ".png";
+        return getImageFromLocalStorage("assets/" + textureSet + "/" + object + "/" + animation + "/" + (animationFrame2 % frameCount).toString() + ".png");
     }
-    return "assets/images/" + object + "/" + animation + "/" + (animationFrame2 % frameCount).toString() + ".png";
+    return getImageFromLocalStorage("assets/images/" + object + "/" + animation + "/" + (animationFrame2 % frameCount).toString() + ".png");
 }
 function drawBackground() {
     bgImage.src = getImagePath("world", "bg", 1);
@@ -148,11 +169,13 @@ function drawFloor() {
         ctx.drawImage(floor, 810, 1180, floor.width * 10, floor.height * 10);
     };
 }
+var t = 0;
 function gameLoop() {
+    t = Date.now();
+    document.getElementById("macamoEasterEgg").src = getImagePath("macamo", "idle", 2);
     drawBackground();
     drawNut();
     drawFloor();
-    // Run Macamo, Cat, and Bomb drawing asynchronously
     Promise.all([
         new Promise(resolve => { drawMacamo(); setTimeout(resolve, 0); }),
         new Promise(resolve => { drawCat(); setTimeout(resolve, 0); }),
@@ -162,11 +185,10 @@ function gameLoop() {
             }
             setTimeout(resolve, 0);
         })
-    ]);
+    ]); // ts isn't even neccesary now that there's a better/smarter graphics system
     drawWall();
     drawCannon();
     drawArrows();
-    requestAnimationFrame(gameLoop);
     if (!started) {
         ctx.save();
         ctx.globalAlpha = 0.5;
@@ -180,8 +202,8 @@ function gameLoop() {
         ctx.restore();
     }
     if (shot) {
-        nutY -= 13;
-        nutX += 27 * shootDirection;
+        nutY -= 13 * 2;
+        nutX += 27 * shootDirection * 2;
         if (nutAnimation != "hit2") {
             if (nutX > 1250 || nutX < 520) {
                 shootDirection *= -1
@@ -237,6 +259,12 @@ function gameLoop() {
             }
         }
     }
+    while (Date.now() < t + 1000/60) {
+        ;
+    }
+    document.getElementById("cacheSize").innerHTML = localStorage.length;
+    document.getElementById("totalCacheSize").innerHTML = 52;
+    requestAnimationFrame(gameLoop);
 }
 function handleClick (event) {
     if (started) {
@@ -312,3 +340,6 @@ document.getElementById("extrasOpenClose").addEventListener("click", function() 
         document.getElementById("extras").style.right = "-31%"
     }
 });
+// don't steal this code unless ur changing at least 30 lines and crediting me.
+// You don't have to credit if you only take 20 or less lines. Credit is
+// appreciated if you take a small snippet though.
