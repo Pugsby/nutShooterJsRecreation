@@ -1,43 +1,48 @@
+@font-face {
+  font-family: "Daydream";
+  src: url("/assets/fonts/Daydream.ttf") format("truetype");
+}
 body {
-    background-color: #161616;
-    margin: 0;
-    height: 100vh;
-    overflow: hidden;
-    color: white;
-    font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
+  background-color: #161616;
+  margin: 0;
+  height: 100vh;
+  overflow: hidden;
+  color: white;
+  font-family: "Daydream";
+  font-size: 10px;
 }
 #gameCanvas {
-    max-width: 150vh;
-    max-height: 67vw;
-    aspect-ratio: 4/3;
-    width: 100vw;
-    height: 100vh;
-    object-fit: contain;
-    background-color: black;
-    position: absolute;
-    left: 50%;
-    top: 50%;
-    transform: translate(-50%, -50%);
+  max-width: 150vh;
+  max-height: 67vw;
+  aspect-ratio: 4/3;
+  width: 100vw;
+  height: 100vh;
+  object-fit: contain;
+  background-color: black;
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
 }
 p, h2, h3 {
-    margin: 0;
+  margin: 0;
 }
 #extras {
-    position: absolute;
-    right: -31%;
-    top: 50%;
-    transform: translateY(-50%);
-    background-color: #00000080;
-    width: 30%;
-    height: 75%;
-    backdrop-filter: blur(16px);
-    border-top-left-radius: 16px;
-    border-bottom-left-radius: 16px;
-    box-shadow: 0 0 0 2px rgba(255,255,255,0.15);
-    padding: 10px;
-    padding-left: 2%;
-    overflow-y: auto;
-    transition: all 0.5s;
+  position: absolute;
+  right: -31%;
+  top: 50%;
+  transform: translateY(-50%);
+  background-color: #00000080;
+  width: 30%;
+  height: 75%;
+  backdrop-filter: blur(16px);
+  border-top-left-radius: 16px;
+  border-bottom-left-radius: 16px;
+  box-shadow: 0 0 0 2px rgba(255,255,255,0.15);
+  padding: 10px;
+  padding-left: 2%;
+  overflow-y: auto;
+  transition: all 0.5s;
 }
 /* The switch - the box around the slider */
 .switch {
@@ -120,4 +125,30 @@ input:checked + .slider:before {
   border-radius: 999px;
   border: none;
   cursor: pointer;
+}
+#mobileButtons {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  /* how to i make it possible to click through the div bg */
+  pointer-events: none;
+}
+#mobileButtons img {
+  cursor: pointer;
+  width: min(30vw, 30vh);
+  background-color: rgba(0, 0, 0, 0.139);
+  position: absolute;
+  bottom: 0;
+  image-rendering: pixelated;
+  border-radius: 16px;
+  backdrop-filter: blur(2px);
+  pointer-events: all;
+}
+#leftButton {
+  left: 0;
+}
+#rightButton {
+  right: 0;
 }

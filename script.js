@@ -41,6 +41,23 @@ var meowSfx = new Audio("assets/sounds/meow.wav");
 var cannonSfx = new Audio("assets/sounds/cannon.wav");
 var song = new Audio("assets/sounds/song.wav");
 var textureSet = "default";
+var fps = 0;
+var fontPath = "assets/fonts/Daydream.ttf"; // that one kirby font
+var fontName = "Daydream";
+var mobileButtons = true;
+document.getElementById("mobileButtons").style.display = "none";
+fetch(fontPath)
+    .then(response => response.arrayBuffer())
+    .then(arrayBuffer => {
+        return new Promise((resolve, reject) => {
+            font = new FontFace("Daydream", "url(data:font/ttf;base64," + btoa(String.fromCharCode(...new Uint8Array(arrayBuffer))) + ")");
+            font.load().then(resolve).catch(reject);
+        });
+    })
+    .then(() => {
+        document.fonts.add(font);
+    })
+
 var textureSets = {
     "default": [
 
@@ -64,12 +81,12 @@ setInterval(function() {
 ctx.imageSmoothingEnabled = false;
 gameCanvas.style.imageRendering = "pixelated";
 document.getElementById("clearCache").addEventListener("click", function() {
-    localStorage.clear();
+    localStorage.clear("nutShooterImages");
 });
 function getImageFromLocalStorage(path) {
     // check if the image is in local storage
-    if (localStorage.getItem(path)) {
-        return localStorage.getItem(path);
+    if (localStorage.getItem("nutShooterImages/" + path)) {
+        return localStorage.getItem("nutShooterImages/" + path);
     }
     // if not, fetch it from the server and store it in local storage
     fetch(path)
@@ -77,7 +94,7 @@ function getImageFromLocalStorage(path) {
         .then(blob => {
             const reader = new FileReader();
             reader.onloadend = function() {
-                localStorage.setItem(path, reader.result);
+                localStorage.setItem("nutShooterImages/" + path, reader.result);
             };
             reader.readAsDataURL(blob);
         });
@@ -170,8 +187,11 @@ function drawFloor() {
     };
 }
 var t = 0;
+var lastFrame = 0;
+var delta = 0;
 function gameLoop() {
     t = Date.now();
+    lastFrame = t;
     document.getElementById("macamoEasterEgg").src = getImagePath("macamo", "idle", 2);
     drawBackground();
     drawNut();
@@ -194,7 +214,7 @@ function gameLoop() {
         ctx.globalAlpha = 0.5;
         ctx.fillStyle = "#000";
         ctx.fillRect(0, 0, gameCanvas.width, gameCanvas.height);
-        ctx.font = "80px Arial";
+        ctx.font = `60px ${fontName}`;
         ctx.globalAlpha = 1
         ctx.fillStyle = "#fff";
         ctx.textAlign = "center";
@@ -259,12 +279,35 @@ function gameLoop() {
             }
         }
     }
-    while (Date.now() < t + 1000/60) {
+    if (mobileButtons == 'true' || mobileButtons == true) {
+        document.getElementById("rightButton").src = rightArrow.src;
+        document.getElementById("leftButton").src = leftArrow.src;
+    }
+    while (Date.now() < t + 1000/60) { // cap it at 60 fps incase the user's computer is too fast
         ;
     }
+    fps = 1000/delta;
+        ctx.font = `30px ${fontName}`;
+    ctx.fillStyle = "#fff";
+    ctx.fillText(Math.round(fps), 30, 30);
     document.getElementById("cacheSize").innerHTML = localStorage.length;
     document.getElementById("totalCacheSize").innerHTML = 52;
     requestAnimationFrame(gameLoop);
+}
+function shoot (dir) {
+    if (shot) {
+        return
+    }
+    shot = true
+    if (dir == "left") {
+        shootDirection = -1
+        leftArrowAnimation = "clicked"
+    } else {
+        shootDirection = 1
+        rightArrowAnimation = "clicked"
+    }
+    cannonSfx.play()
+    macamoAnimation = dir
 }
 function handleClick (event) {
     if (started) {
@@ -275,24 +318,12 @@ function handleClick (event) {
         const canvasY = (event.clientY - rect.top) * scaleY;
         if (canvasX > 590 && canvasX < 850) {
             if (canvasY > 830 && canvasY < 1090) {
-                if (!shot) {
-                    shootDirection = -1
-                    shot = true
-                    leftArrowAnimation = "clicked"
-                    macamoAnimation = "left"
-                    cannonSfx.play()
-                }
+                shoot("left")
             }
         }
         if (canvasX > 1050 && canvasX < 1310) {
             if (canvasY > 830 && canvasY < 1090) {
-                if (!shot) {
-                    shootDirection = 1
-                    shot = true
-                    rightArrowAnimation = "clicked"
-                    macamoAnimation = "right"
-                    cannonSfx.play()
-                }
+                shoot("right")
             }
         }
     }
@@ -304,8 +335,17 @@ function startGameOnce() {
         gameCanvas.addEventListener('click', handleClick)
         started = true;
         song.play();
+        if (mobileButtons == 'true' || mobileButtons == true) {
+            document.getElementById("mobileButtons").style.display = "block";
+        }
     }
 }
+document.getElementById("leftButton").addEventListener('click', function() {
+    shoot("left")
+});
+document.getElementById("rightButton").addEventListener('click', function() {
+    shoot("right")
+});
 gameCanvas.addEventListener('click', startGameOnce, { once: true });
 song.addEventListener('ended', function() {
     location.reload();
@@ -322,13 +362,22 @@ document.getElementById('noDithering').addEventListener('change', function(e) {
     textureSet = e.target.checked ? 'noDither' : 'default';
     document.cookie = "textureSet=" + textureSet + "; path=/";
 });
-
-// On page load, set checkbox and textureSet from cookie if present
 (function() {
     var matches = document.cookie.match(/(?:^|; )textureSet=([^;]*)/);
     if (matches) {
         textureSet = matches[1];
         document.getElementById('noDithering').checked = (textureSet === 'noDither');
+    }
+})();
+document.getElementById("phoneEnabled").addEventListener('change', function(e) {
+    mobileButtons = e.target.checked;
+    document.cookie = "mobileButtons=" + mobileButtons + "; path=/";
+});
+(function() {
+    var matches = document.cookie.match(/(?:^|; )mobileButtons=([^;]*)/);
+    if (matches) {
+        mobileButtons = matches[1];
+        document.getElementById('phoneEnabled').checked = (mobileButtons === 'true');
     }
 })();
 var extrasOpened = false
@@ -339,6 +388,10 @@ document.getElementById("extrasOpenClose").addEventListener("click", function() 
     } else {
         document.getElementById("extras").style.right = "-31%"
     }
+});
+setInterval(function() {
+    delta = Date.now() - lastFrame;
+    lastFrame = Date.now();
 });
 // don't steal this code unless ur changing at least 30 lines and crediting me.
 // You don't have to credit if you only take 20 or less lines. Credit is
